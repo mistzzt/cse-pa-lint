@@ -97,11 +97,6 @@ def process_project():
     print('Completed!')
 
     print('\n')
-    print('Start checking line width...')
-    check_line_width(files, optional_files)
-    print('Completed!')
-
-    print('\n')
     print('Start formatting file...')
     format_code(files, optional_files)
     print('Completed!')
@@ -112,6 +107,11 @@ def process_project():
     if result:
         if check_selection(ERROR_STOP_MESSAGE):
             return EXIT_FAILURE
+    print('Completed!')
+
+    print('\n')
+    print('Start checking line width...')
+    check_line_width(files, optional_files)
     print('Completed!')
 
     print('\n')
