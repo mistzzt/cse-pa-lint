@@ -59,10 +59,10 @@ def init():
             if os.path.exists(path):
                 os.remove(path)
             os.rename(project_directory, path)
-            os.mkdir(project_directory)
 
     if values is None:
         values = dict(Files=list(), OptionalFiles=list(), Libraries=list())
+        os.mkdir(project_directory)
 
     with open(configuration_path, 'w') as config:
         config.write(json.dumps(values, indent=4))
