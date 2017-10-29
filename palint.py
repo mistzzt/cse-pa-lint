@@ -5,6 +5,7 @@ import sys
 import argparse
 import json
 import subprocess
+import glob
 
 HOME = os.path.expanduser('~/')
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -42,18 +43,26 @@ def check_selection(prompt):
 
 def init():
     """ Initialize a new project folder. """
+    values = None
 
     if os.path.exists(project_directory):
-        if not check_selection('Project directory already exists. Do you still want to create a new one?'):
-            return
-        path = project + '.old'
-        if os.path.exists(path):
-            os.remove(path)
-        os.rename(project_directory, path)
+        if not os.path.exists(configuration_path):
+            os.chdir(project_directory)
+            files = glob.glob('*.java')
+            libs = glob.glob('*.jar')
 
-    os.mkdir(project_directory)
+            values = dict(Files=files, OptionalFiles=list(), Libraries=libs)
+        else:
+            if not check_selection('Project directory already exists. Do you still want to create a new one?'):
+                return
+            path = project + '.old'
+            if os.path.exists(path):
+                os.remove(path)
+            os.rename(project_directory, path)
+            os.mkdir(project_directory)
 
-    values = dict(Files=list(), OptionalFiles=list(), Libraries=list())
+    if values is None:
+        values = dict(Files=list(), OptionalFiles=list(), Libraries=list())
 
     with open(configuration_path, 'w') as config:
         config.write(json.dumps(values, indent=4))
@@ -141,10 +150,11 @@ def test_compile(files, optionals, libraries):
         error('Your source codes cannot be compiled; see {} for details.'.format(COMPILE_ERROR_FILE_NAME))
         has_error = True
 
-    result = subprocess.check_output(cmd.format(class_path, ' '.join(optionals)), shell=True)
-    if len(result) != 0:
-        error('Your optional files cannot be compiled; see {} for details.'.format(COMPILE_ERROR_FILE_NAME))
-        has_error = True
+    if len(optionals) != 0:
+        result = subprocess.check_output(cmd.format(class_path, ' '.join(optionals)), shell=True)
+        if len(result) != 0:
+            error('Your optional files cannot be compiled; see {} for details.'.format(COMPILE_ERROR_FILE_NAME))
+            has_error = True
 
     return has_error
 
