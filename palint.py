@@ -122,6 +122,11 @@ def process_project():
             return EXIT_FAILURE
     print('Completed!')
 
+    print('\n')
+    print('Performing cleanup...')
+    cleanup()
+    print('Completed!')
+
 
 def check_files(files, optionals, libraries):
     has_error = False
@@ -215,6 +220,7 @@ def format_code(files, optionals):
         os.system(cmd)
 
     for name in files:
+        print('\n')
         print('Showing diff of file {} ...'.format(name))
 
         status = os.system('diff {0} {1}/{0}'.format(name, backup_folder))
@@ -226,6 +232,7 @@ def format_code(files, optionals):
             print('Reverted file ' + name)
 
     for name in optionals:
+        print('\n')
         print('Showing diff of file {} ...'.format(name))
 
         status = os.system('diff {0} {1}/{0}'.format(name, backup_folder))
@@ -235,6 +242,11 @@ def format_code(files, optionals):
         if not check_selection('Do you want to keep the change in file {}?'.format(name)):
             os.system('cp {}/{} .'.format(backup_folder, name))
             print('Reverted file ' + name)
+
+
+def cleanup():
+    """ Clean compiled class files. """
+    os.system('rm *.class')
 
 
 def error(msg):
