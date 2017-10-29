@@ -6,11 +6,13 @@ import argparse
 import json
 import subprocess
 import glob
+import shutil
 
 HOME = os.path.expanduser('~/')
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 CHECKSTYLE_PATH = os.path.join(SCRIPT_DIR, 'bin', 'checkstyle-8.3-all.jar')
 STYLE_CONFIG_PATH = os.path.join(SCRIPT_DIR, 'bin', 'google_checks.xml')
+FORMATTER_PATH = os.path.join(SCRIPT_DIR, 'bin', 'google-java-format-1.6-SNAPSHOT-CSE11-all-deps.jar')
 
 CONFIG_FILE_NAME = 'config.json'
 COMPILE_ERROR_FILE_NAME = 'compile_error.log'
@@ -57,7 +59,7 @@ def init():
                 return
             path = project + '.old'
             if os.path.exists(path):
-                os.remove(path)
+                shutil.rmtree(path)
             os.rename(project_directory, path)
 
     if values is None:
@@ -82,6 +84,10 @@ def process_project():
     optional_files = data['OptionalFiles']
     libraries = data['Libraries']
 
+    if len(files) == 0:
+        error('No files will be processed.')
+        return EXIT_FAILURE
+
     print('\n')
     print('Start checking files...')
     result = check_files(files, optional_files, libraries)
@@ -93,6 +99,11 @@ def process_project():
     print('\n')
     print('Start checking line width...')
     check_line_width(files, optional_files)
+    print('Completed!')
+
+    print('\n')
+    print('Start formatting file...')
+    format_code(files, optional_files)
     print('Completed!')
 
     print('\n')
@@ -186,6 +197,46 @@ def check_line_width(files, optionals):
         os.system(cmd + name)
 
 
+def format_code(files, optionals):
+    """ Format source files using google java formatter and show diff to user. """
+    backup_folder = 'bak'
+
+    if os.path.exists(backup_folder):
+        shutil.rmtree(backup_folder)
+
+    os.mkdir(backup_folder)
+    os.system('cp *.java {}/.'.format(backup_folder))
+
+    cmd = 'java -jar {} --replace {}'.format(FORMATTER_PATH, ' '.join(files))
+    os.system(cmd)
+
+    if len(optionals) != 0:
+        cmd = 'java -jar {} --replace {}'.format(FORMATTER_PATH, ' '.join(optionals))
+        os.system(cmd)
+
+    for name in files:
+        print('Showing diff of file {} ...'.format(name))
+
+        status = os.system('diff {0} {1}/{0}'.format(name, backup_folder))
+        if status == 0:
+            continue
+
+        if not check_selection('Do you want to keep the change in file {}?'.format(name)):
+            os.system('cp {}/{} .'.format(backup_folder, name))
+            print('Reverted file ' + name)
+
+    for name in optionals:
+        print('Showing diff of file {} ...'.format(name))
+
+        status = os.system('diff {0} {1}/{0}'.format(name, backup_folder))
+        if status == 0:
+            continue
+
+        if not check_selection('Do you want to keep the change in file {}?'.format(name)):
+            os.system('cp {}/{} .'.format(backup_folder, name))
+            print('Reverted file ' + name)
+
+
 def error(msg):
     """ Show error message to user. """
     sys.stdout.write('[Error] ' + msg + '\n')
@@ -201,11 +252,11 @@ os.chdir(HOME)
 
 if args.init:
     init()
-    exit(0)
+    exit(EXIT_SUCCESS)
 
 if not os.path.exists(project_directory) and not args.init:
-    error('PA folder does not exist: "%s".' % project_directory)
-    exit(0)
+    error('PA folder does not exist: {}'.format(project_directory))
+    exit(EXIT_FAILURE)
 
 os.chdir(project_directory)
 code = process_project()
