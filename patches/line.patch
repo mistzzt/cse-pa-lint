@@ -1,0 +1,11 @@
+--- JavaFormatterOptions.java	2017-10-29 21:23:59.057733900 -0700
++++ Modified.java	2017-10-29 21:33:17.479177900 -0700
+@@ -29,7 +29,7 @@
+ @Immutable
+ public class JavaFormatterOptions {
+ 
+-  static final int DEFAULT_MAX_LINE_LENGTH = 100;
++  static final int DEFAULT_MAX_LINE_LENGTH = 80;
+ 
+   public enum Style {
+ 

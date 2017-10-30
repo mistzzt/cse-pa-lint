@@ -1,0 +1,40 @@
+language: java
+
+jdk:
+  - oraclejdk8
+
+  # see https://github.com/travis-ci/travis-ci/issues/8408
+before_install:
+  - unset _JAVA_OPTIONS
+  - git clone https://github.com/google/google-java-format.git
+  - cd google-java-format
+  - patch ./core/src/main/java/com/google/googlejavaformat/java/JavaFormatterOptions.java < ../patches/line.patch
+
+# use travis-ci docker based infrastructure
+sudo: false
+
+cache:
+  directories:
+    - $HOME/.m2
+
+install: mvn install -DskipTests=true -V
+
+script: cp ./core/target/google-java-format-*-all-deps.jar ../bin/google-java-format.jar
+
+after_success:
+  - cd ..
+  - mkdir release
+  - cp palint.py release/
+  - cp -r bin release/
+  - cd release
+  - wget https://sourceforge.net/projects/checkstyle/files/latest/download
+  - mv download bin/checkstyle.jar
+  - zip -r release.zip .
+
+deploy:
+  provider: releases
+  api-key: $GITHUB_TOKEN
+  file: release.zip
+  skip_cleanup: true
+  on:
+    tags: true

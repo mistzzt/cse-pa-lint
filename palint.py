@@ -12,9 +12,9 @@ from subprocess import Popen, PIPE
 
 HOME = os.path.expanduser('~/')
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-CHECKSTYLE_PATH = os.path.join(SCRIPT_DIR, 'bin', 'checkstyle-8.3-all.jar')
+CHECKSTYLE_PATH = os.path.join(SCRIPT_DIR, 'bin', 'checkstyle.jar')
 STYLE_CONFIG_PATH = os.path.join(SCRIPT_DIR, 'bin', 'google_checks.xml')
-FORMATTER_PATH = os.path.join(SCRIPT_DIR, 'bin', 'google-java-format-1.6-SNAPSHOT-CSE11-all-deps.jar')
+FORMATTER_PATH = os.path.join(SCRIPT_DIR, 'bin', 'google-java-format.jar')
 
 CONFIG_FILE_NAME = 'config.json'
 COMPILE_ERROR_FILE_NAME = 'compile_error.log'
