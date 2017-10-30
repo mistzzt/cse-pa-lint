@@ -8,6 +8,8 @@ import subprocess
 import glob
 import shutil
 
+from subprocess import Popen, PIPE
+
 HOME = os.path.expanduser('~/')
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 CHECKSTYLE_PATH = os.path.join(SCRIPT_DIR, 'bin', 'checkstyle-8.3-all.jar')
@@ -19,6 +21,10 @@ COMPILE_ERROR_FILE_NAME = 'compile_error.log'
 STYLE_ERROR_FILE_NAME = 'style_error.log'
 
 ERROR_STOP_MESSAGE = 'Exit now?'
+AI_MESSAGE = 'I Excel with Integrity'
+TURN_IN_PROMPT = 'Do you want to turn in assignment now?'
+
+TURN_IN_COMMAND = 'cse11turnin {}'
 
 EXIT_SUCCESS = 0
 EXIT_FAILURE = 1
@@ -35,8 +41,11 @@ def parse_args():
 def check_selection(prompt):
     """ Prompt the user for a yes/no question. """
 
-    sys.stdout.write(prompt + ' [y/n] ')
+    sys.stdout.write('\033[93m' + prompt + '\033[0m [y/n] ')
     answer = sys.stdin.readline().strip().lower()
+
+    if len(answer) == 0:
+        return True
 
     if answer == 'yes' or answer == 'y':
         return True
@@ -125,6 +134,14 @@ def process_project():
     print('\n')
     print('Performing cleanup...')
     cleanup()
+    print('Completed!')
+
+    if not check_selection(TURN_IN_PROMPT):
+        return
+
+    print('\n')
+    print('Start turning in assignment...')
+    turnin()
     print('Completed!')
 
 
@@ -249,9 +266,19 @@ def cleanup():
     os.system('rm *.class')
 
 
+def turnin():
+    """ Turn in this homework. """
+    p = Popen(TURN_IN_COMMAND.format(project), stdout=sys.stdout, stdin=PIPE, stderr=PIPE, shell=True)
+    p.stdin.write(AI_MESSAGE + '\n')
+    p.stdin.write('y')
+
+    p.stdin.close()
+    p.wait()
+
+
 def error(msg):
     """ Show error message to user. """
-    sys.stdout.write('[Error] ' + msg + '\n')
+    sys.stderr.write('> \033[93m{} \033[0m\n'.format(msg))
 
 
 args = parse_args()
