@@ -25,6 +25,7 @@ AI_MESSAGE = 'I Excel with Integrity'
 TURN_IN_PROMPT = 'Do you want to turn in assignment now?'
 
 TURN_IN_COMMAND = 'cse11turnin {}'
+VERIFY_COMMAND = 'cse11verify {}'
 
 EXIT_SUCCESS = 0
 EXIT_FAILURE = 1
@@ -142,6 +143,12 @@ def process_project():
     print('\n')
     print('Start turning in assignment...')
     turnin()
+
+    print('\n')
+    print('Start verifying assignment...')
+    verify()
+
+    print('\n')
     print('Completed!')
 
 
@@ -178,13 +185,16 @@ def test_compile(files, optionals, libraries):
     class_path = ''.join(libs) + '.'
     cmd = 'javac -cp {} {}'
 
-    result = subprocess.check_output(cmd.format(class_path, ' '.join(files)), shell=True)
+    java_list = filter(lambda x: str(x).endswith('.java'), files)
+    optional_list = filter(lambda x: str(x).endswith('.java'), optionals)
+
+    result = subprocess.check_output(cmd.format(class_path, ' '.join(java_list)), shell=True)
     if len(result) != 0:
         error('Your source codes cannot be compiled; see {} for details.'.format(COMPILE_ERROR_FILE_NAME))
         has_error = True
 
     if len(optionals) != 0:
-        result = subprocess.check_output(cmd.format(class_path, ' '.join(optionals)), shell=True)
+        result = subprocess.check_output(cmd.format(class_path, ' '.join(optional_list)), shell=True)
         if len(result) != 0:
             error('Your optional files cannot be compiled; see {} for details.'.format(COMPILE_ERROR_FILE_NAME))
             has_error = True
@@ -274,6 +284,11 @@ def turnin():
 
     p.stdin.close()
     p.wait()
+
+
+def verify():
+    """ Verify assignment. """
+    os.system(VERIFY_COMMAND.format(project))
 
 
 def error(msg):
