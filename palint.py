@@ -27,6 +27,8 @@ TURN_IN_PROMPT = 'Do you want to turn in assignment now?'
 TURN_IN_COMMAND = 'cse11turnin {}'
 VERIFY_COMMAND = 'cse11verify {}'
 
+README_FILE = 'README'
+
 EXIT_SUCCESS = 0
 EXIT_FAILURE = 1
 
@@ -185,8 +187,8 @@ def test_compile(files, optionals, libraries):
     class_path = ''.join(libs) + '.'
     cmd = 'javac -cp {} {}'
 
-    java_list = filter(lambda x: str(x).endswith('.java'), files)
-    optional_list = filter(lambda x: str(x).endswith('.java'), optionals)
+    java_list = java_files(files)
+    optional_list = java_files(optionals)
 
     result = subprocess.check_output(cmd.format(class_path, ' '.join(java_list)), shell=True)
     if len(result) != 0:
@@ -203,8 +205,8 @@ def test_compile(files, optionals, libraries):
 
 
 def check_style(files, optionals):
-    java_files = ' '.join(files) + ' '.join(optionals)
-    cmd = 'java -jar {} -c {} {}'.format(CHECKSTYLE_PATH, STYLE_CONFIG_PATH, java_files)
+    files_argument = ' '.join(java_files(files)) + ' '.join(java_files(optionals))
+    cmd = 'java -jar {} -c {} {}'.format(CHECKSTYLE_PATH, STYLE_CONFIG_PATH, files_argument)
 
     result = subprocess.check_output(cmd, shell=True)
 
@@ -220,13 +222,16 @@ def check_style(files, optionals):
 def check_line_width(files, optionals):
     cmd = 'grep -n \'.\\{81,\\}\' '
 
-    for name in files:
+    for name in java_files(files):
         print('Checking line width in ' + name)
         os.system(cmd + name)
 
-    for name in optionals:
+    for name in java_files(optionals):
         print('Checking line width in ' + name)
         os.system(cmd + name)
+
+    print('Checking line width in ' + README_FILE)
+    os.system(cmd + README_FILE)
 
 
 def format_code(files, optionals):
@@ -246,7 +251,7 @@ def format_code(files, optionals):
         cmd = 'java -jar {} --replace {}'.format(FORMATTER_PATH, ' '.join(optionals))
         os.system(cmd)
 
-    for name in files:
+    for name in java_files(files):
         print('\n')
         print('Showing diff of file {} ...'.format(name))
 
@@ -258,7 +263,7 @@ def format_code(files, optionals):
             os.system('cp {}/{} .'.format(backup_folder, name))
             print('Reverted file ' + name)
 
-    for name in optionals:
+    for name in java_files(optionals):
         print('\n')
         print('Showing diff of file {} ...'.format(name))
 
@@ -294,6 +299,10 @@ def verify():
 def error(msg):
     """ Show error message to user. """
     sys.stderr.write('> \033[93m{} \033[0m\n'.format(msg))
+
+
+def java_files(file_list):
+    return filter(lambda x: str(x).endswith('.java'), file_list)
 
 
 args = parse_args()
