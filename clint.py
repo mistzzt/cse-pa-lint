@@ -48,7 +48,8 @@ def run_program(file_name):
     output = p.communicate(NEW_LINE.join(stdin).encode('UTF-8'))
 
     invoke_diff(config, output)
-    write_file(CHANGED_CONFIG_FORMAT.format(file_name), cmd, stdin, output[INDEX_STDOUT], output[INDEX_STDERR])
+    write_file(CHANGED_CONFIG_FORMAT.format(file_name), cmd, stdin, output[INDEX_STDOUT], output[INDEX_STDERR],
+               pre_task=pre_tasks)
 
 
 def invoke_diff(config, output):
@@ -66,14 +67,16 @@ def invoke_diff(config, output):
     print(NEW_LINE.join(diff))
 
 
-def write_file(file_name, cmd, stdin, stdout, stderr):
+def write_file(file_name, cmd, stdin, stdout, stderr, pre_task=None):
+    if pre_task is None:
+        pre_task = []
     stdout = strip_array_string(convert_byte_string(stdout).split(NEW_LINE))
     stderr = strip_array_string(convert_byte_string(stderr).split(NEW_LINE))
 
     with open(file_name, 'w') as config:
         config.write(json.dumps(
             {
-                KEY_PRE_TASK: [],
+                KEY_PRE_TASK: pre_task,
                 KEY_CMD: cmd,
                 KEY_STDIN: stdin,
                 KEY_STDOUT: stdout,
